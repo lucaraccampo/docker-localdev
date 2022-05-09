@@ -1,0 +1,46 @@
+version: '3'
+services:
+
+  mysql:
+    image: mysql:5.7
+    container_name: ${COMPOSE_PROJECT_NAME}-mysql
+    restart: always
+    volumes:
+      - ./init-db:/docker-entrypoint-initdb.d:cached
+      - mysql-data:/var/lib/mysql
+    command:
+      - --max_allowed_packet=1032505856
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+      - --skip-character-set-client-handshake
+    environment:
+      TZ: "${TIMEZONE}"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "no"
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+
+  php-apache:
+    build:
+      context: ./images/amazon-linux
+    container_name: ${COMPOSE_PROJECT_NAME}-php-apache
+    restart: always
+
+    volumes:
+      - ${DOCUMENT_ROOT}:/var/www/html
+#      - vendor:/var/www/html/vendor
+#      - sites:/var/www/html/web/sites
+#      - modules:/var/www/html/modules
+      - ./config/php/mail.ini:/etc/php.d/mail.ini:cached
+    links:
+      - 'mysql'
+    environment:
+      XDEBUG_CONFIG: client_host=${REMOTE_HOST_XDEBUG}
+
+volumes:
+  mysql-data:
+#  vendor:
+#  sites:
+#  modules:
+
